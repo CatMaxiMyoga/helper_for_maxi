@@ -2,4 +2,4 @@
 
 All the Functions I could need multiple times
 
-## For more infos, look at `./package/README.md`
+## For more information, look at `./{version}/package/README.md`
