@@ -1,4 +1,8 @@
-# UPDATE 1.0.5
+# UPDATE 1.0.6
+
+## INFO
+
+- Had to skip version 1.0.5 due to mistake with uploading
 
 ## ADDED
 
