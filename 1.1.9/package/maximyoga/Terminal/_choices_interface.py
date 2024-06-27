@@ -3,7 +3,7 @@ from string import digits
 import random
 from pygetwindow import getActiveWindowTitle
 from pynput.keyboard import Listener, Key, KeyCode
-from color import foreground, background #! color -> .color
+from .color import foreground, background
 
 def clear() -> None:
 	system("cls")
@@ -143,11 +143,3 @@ class ChoiceInterface:
 		validKeyList: list[self.__key] = self.confirmKeys+self.cancelKeys+[Key.up, Key.down]
 		if self.__lastKeyPressed in validKeyList:
 			lst.stop()
-
-#!TMP...
-try:
-	interface = ChoiceInterface(choicesSurround="|", cancelKey=Key.backspace, addArrowToSelected=True)
-	choice = interface(["Choice 1", "Another Choice", "Some other Choice"])
-	input(choice)
-except Exception as e:
-	input(e)

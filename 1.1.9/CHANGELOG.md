@@ -1,5 +1,6 @@
-# UPDATE 1.1.8
+# UPDATE 1.1.9
 
 ## CHANGED
-- Fixed the `Terminal.ChoicesInterface`
-- Added a hint to the `KWArgsHandler` for use with `**kwargs` in the `checkParams` decorator's documentation
+- Fixed `ChoicesInterface`... again
+	- removed temporary testing code and changed the color import from a normal relative one to a package relative one (or whatever they're called)
+		- `from color import ...` -> `from .color import ...`
