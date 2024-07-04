@@ -5,19 +5,20 @@ from pygetwindow import getActiveWindowTitle
 from pynput.keyboard import Listener, Key, KeyCode
 from .color import foreground, background
 
+type _key = Key | KeyCode
+
 def clear() -> None:
 	system("cls")
 
 class ChoiceInterface:
-	type __key = Key | KeyCode
 
 	def __init__(
 		self, *,
 		textColor: foreground = foreground.WHITE,
 		highlightTextColor: foreground = foreground.BLACK,
 		highlightColor: background = background.WHITE,
-		confirmKey: list[__key] | tuple[__key, ...] | __key = (Key.enter, Key.right),
-		cancelKey: list[__key] | tuple[__key, ...] | __key = Key.esc,
+		confirmKey: list[_key] | tuple[_key, ...] | _key = (Key.enter, Key.right),
+		cancelKey: list[_key] | tuple[_key, ...] | _key = Key.esc,
 		choicesSurround: str = "",
 		addArrowToSelected: bool = False
 	) -> None:
@@ -45,7 +46,8 @@ class ChoiceInterface:
 		self.terminalWindowTitle = "Choice Interface {" + "".join(random.choices(digits, k=10)) + "}"
 		self.lastKeyPressed = None
 
-	def __conv_keys(self, item: tuple[__key, ...] | list[__key] | __key) -> list[__key]:
+	@staticmethod
+	def __conv_keys(item: tuple[_key, ...] | list[_key] | _key) -> list[_key]:
 		if isinstance(item, tuple):
 			return list(item)
 		elif isinstance(item, list):
@@ -59,8 +61,9 @@ class ChoiceInterface:
 			suffix: str = "",
 			selected: int = 0,
 			minimumHighlightLength: int = 0,
-			terminalTitleBefore: str = "Terminal"
-		) -> int:
+			terminalTitleBefore: str = "Terminal",
+			returnLine: bool = False
+		) -> int | tuple[int, str]:
 		r"""
 		Starts the interface
 		:param choices:
@@ -69,6 +72,7 @@ class ChoiceInterface:
 		:param selected:
 		:param minimumHighlightLength:
 		:param terminalTitleBefore:
+		:param returnLine:
 		:return:
 		"""
 		system(f"TITLE {self.terminalWindowTitle}")
@@ -111,7 +115,7 @@ class ChoiceInterface:
 			if suffix:
 				print(self.textColor.value+prefix+foreground.RESET.value)
 
-			key: self.__key | None = self._waitForKey()
+			key: _key | None = self._waitForKey()
 
 			if key == Key.down and selected != len(choices)-1:
 				selected += 1
@@ -120,26 +124,30 @@ class ChoiceInterface:
 			elif key in self.confirmKeys:
 				if key == Key.enter: input()
 				system(f"TITLE {terminalTitleBefore}")
+				if returnLine:
+					return selected, choices[selected]
 				return selected
 			elif key in self.cancelKeys:
 				if key == Key.enter: input()
 				system(f"TITLE {terminalTitleBefore}")
+				if returnLine:
+					return -1, ""
 				return -1
 			elif key in [Key.down, Key.up]:
 				pass
 			else:
 				raise Exception("Somehow, Somewhere, Something went wrong :/")
 
-	def _waitForKey(self) -> __key | None:
+	def _waitForKey(self) -> _key | None:
 		lst = Listener(on_press=lambda key: self._onKeyPress(key, lst))
 		lst.start()
 		lst.join()
 		return self.__lastKeyPressed
 
-	def _onKeyPress(self, key: __key | None, lst: Listener) -> None:
+	def _onKeyPress(self, key: _key | None, lst: Listener) -> None:
 		if getActiveWindowTitle() != self.terminalWindowTitle:
 			return
 		self.__lastKeyPressed = key
-		validKeyList: list[self.__key] = self.confirmKeys+self.cancelKeys+[Key.up, Key.down]
+		validKeyList: list[_key] = self.confirmKeys+self.cancelKeys+[Key.up, Key.down]
 		if self.__lastKeyPressed in validKeyList:
 			lst.stop()
