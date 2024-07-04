@@ -1,3 +1,0 @@
-# UPDATE 1.1.0
-
-## FIXED MODULE
