@@ -4,8 +4,7 @@
 Terminal.color
 ~~~~~~~~~~~~~~
 
-Contains Variables with Color Codes to change the color in the Terminal (Windows)
+Contains Variables with ANSI Color Codes to change the color in the Terminal (Windows)
 """
 
-from ._background import background
-from ._foreground import foreground
+from .background import RESET
