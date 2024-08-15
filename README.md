@@ -14,8 +14,8 @@ pip install helper-for-maxi
 
 ```py
 import maximyoga
-import maximyoga.*
-from maximyoga import *
-from maximyoga.* import *
-# You can replace * with what you need!
+import maximyoga._
+from maximyoga import _
+from maximyoga._ import _
+# You can replace _ with what you need!
 ```

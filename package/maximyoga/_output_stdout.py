@@ -8,5 +8,5 @@ def output_stdout(outputValue):
     :return:
     """
 
-    sys.stdout.write(str(outputValue) + "\n")
+    sys.stdout.write(str(outputValue))
     sys.stdout.flush()

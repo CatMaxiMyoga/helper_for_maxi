@@ -20,3 +20,4 @@ LCYAN = ANSICodeBase(106)
 LWHITE = ANSICodeBase(107)
 
 RESET = ANSICodeBase(0)
+BGRESET = ANSICodeBase(49)

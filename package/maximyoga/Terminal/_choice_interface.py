@@ -11,7 +11,6 @@ def clear() -> None:
 	system("cls")
 
 class ChoiceInterface:
-
 	def __init__(
 		self, *,
 		textColor: foreground = foreground.WHITE,

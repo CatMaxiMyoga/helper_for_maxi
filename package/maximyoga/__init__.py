@@ -5,7 +5,6 @@ Maxi's Functions
 ~~~~~~~~~~~~~~~~
 
 Contains all my Functions.
-Better Version
 
 """
 

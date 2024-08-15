@@ -2,6 +2,7 @@ from ...._utils import ANSICodeBase
 
 BOLD = ANSICodeBase(1)
 UNDERLINE = ANSICodeBase(4)
+STRIKETHROUGH = ANSICodeBase(9)
 SWAPCOLOR = ANSICodeBase(7)
 BLACK = ANSICodeBase(30)
 RED = ANSICodeBase(31)
@@ -22,3 +23,4 @@ LCYAN = ANSICodeBase(96)
 LWHITE = ANSICodeBase(97)
 
 RESET = ANSICodeBase(0)
+FGRESET = ANSICodeBase(39)
