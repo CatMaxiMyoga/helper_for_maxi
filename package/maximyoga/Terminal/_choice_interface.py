@@ -130,9 +130,7 @@ class ChoiceInterface:
             _out = []
             for i, line in enumerate(choices):
                 if i == selected:
-                    if not any([self.choicesSurround, self.addArrowToSelected]):
-                        _out.append(f"{self.hlColor}{line:<{hlLen}}{foreground.RESET}")
-                    elif self.addArrowToSelected:
+                    if self.addArrowToSelected:
                         _out.append(
                             f"{self.hlColor}{line:<{hlLen - 3}} > "
                             f"{foreground.RESET}"
@@ -142,7 +140,8 @@ class ChoiceInterface:
                 else:
                     _out.append(f"{self.textColor}{line:<{hlLen}}{foreground.RESET}")
                 if self.choicesSurround:
-                    _out.append(self.choicesSurround + _out + self.choicesSurround)
+                    x = _out[-1]
+                    _out[-1] = f"{self.choicesSurround}{x}{self.choicesSurround}"
 
             out = []
 
@@ -150,7 +149,7 @@ class ChoiceInterface:
                 if i % self.choicesOnLine == 0:
                     out.append("\n")
                 out.append(line)
-                if (i + 1) % self.choicesOnLine != 0:
+                if (i + 1) % self.choicesOnLine != 0 and i != len(_out) - 1:
                     out.append(self.seperator)
 
             outputstring = "".join(out)

@@ -1,3 +1,13 @@
+# UPDATE 1.2.4:1
+
+## FIXED
+- Fixed the code in `Terminal.ChoiceInterface`
+
+## CHANGED
+- From now on using `{version}:{fix#}` to symbolize versions that just fix stuff from `{version}`
+  - e.g. 1.2.4:1
+  - when importing, version is {version}.post{fix#}
+---------------
 # UPDATE 1.2.4
 
 ## ADDED
