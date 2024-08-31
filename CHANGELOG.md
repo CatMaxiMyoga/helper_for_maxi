@@ -1,3 +1,17 @@
+# UPDATE 1.2.4
+
+## ADDED
+- Added parameters to `ChoiceInterface.__init__()`
+  - `navigatePreviousKeys: _keys | _key = Key.up,`
+    - Select previous Choice
+  - `navigateNextKeys: _keys | _key = Key.down`
+    - Select next Choice
+  - `choicesOnLine: int = 1`
+    - How many choices to show on one line
+  - `seperator: str = ""`
+    - Seperator between choices on the same line 
+
+---------------
 # UPDATE 1.2.3
 
 ## ADDED
@@ -14,7 +28,7 @@
 ## CHANGED
 - Made `_utils.ANSICodeBase` use `outputStdout` instead of `print`
 - Added the `@checkParams` decorator to most functions
-- some string parameters to `*args` parameters, adding the `sep` parameter to seperate objects 
+- some string parameters to `*args` parameters, adding the `sep` parameter to separate objects 
   in the `*args` parameter
 
 ## FIXED

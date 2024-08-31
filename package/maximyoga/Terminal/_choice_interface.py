@@ -1,152 +1,202 @@
+import random
 from os import system
 from string import digits
-import random
+
 from pygetwindow import getActiveWindowTitle
-from pynput.keyboard import Listener, Key, KeyCode
-from .color import foreground, background
+from pynput.keyboard import Key, KeyCode, Listener
+
+from .color import background, foreground
+from .._utils import ANSICodeBase
+
 
 type _key = Key | KeyCode
+type _keys = list[_key] | tuple[_key, ...]
+
 
 def clear() -> None:
-	system("cls")
+    system("cls")
+
 
 class ChoiceInterface:
-	def __init__(
-		self, *,
-		textColor: foreground = foreground.WHITE,
-		highlightTextColor: foreground = foreground.BLACK,
-		highlightColor: background = background.WHITE,
-		confirmKey: list[_key] | tuple[_key, ...] | _key = (Key.enter, Key.right),
-		cancelKey: list[_key] | tuple[_key, ...] | _key = Key.esc,
-		choicesSurround: str = "",
-		addArrowToSelected: bool = False
-	) -> None:
-		r"""
-		Creates the callable ChoiceInterface instance
-		:param textColor:
-		:param highlightTextColor:
-		:param highlightColor:
-		:param confirmKey:
-		:param cancelKey:
-		:param choicesSurround:
-		:param addArrowToSelected:
-		"""
-		cfKey = self.__conv_keys(confirmKey)
-		ccKey = self.__conv_keys(cancelKey)
-		if set(cfKey) & set(ccKey):
-			raise ValueError("values in confirmKey and cancelKey may not overlap!")
-		self.confirmKeys = cfKey
-		self.cancelKeys = ccKey
-		self.textColor = textColor
-		self.hlTextColor = highlightTextColor
-		self.hlColor = highlightColor
-		self.choicesSurround = choicesSurround
-		self.addArrowToSelected = addArrowToSelected
-		self.terminalWindowTitle = "Choice Interface {" + "".join(random.choices(digits, k=10)) + "}"
-		self.lastKeyPressed = None
+    def __init__(
+            self, *,
+            textColor: ANSICodeBase = foreground.WHITE,
+            highlightTextColor: ANSICodeBase = foreground.BLACK,
+            highlightBackgroundColor: ANSICodeBase = background.WHITE,
+            confirmKey: _keys | _key = (Key.enter, Key.right),
+            cancelKey: _keys | _key = Key.esc,
+            navigatePreviousKeys: _keys | _key = Key.up,
+            navigateNextKeys: _keys | _key = Key.down,
+            choicesSurround: str = "",
+            addArrowToSelected: bool = False,
+            choicesOnLine: int = 1,
+            seperator: str = ""
+    ) -> None:
+        r"""
+        Creates an instance of the interface
+        :param textColor:
+        :param highlightTextColor:
+        :param highlightBackgroundColor:
+        :param confirmKey:
+        :param cancelKey:
+        :param navigatePreviousKeys:
+        :param navigateNextKeys:
+        :param choicesSurround:
+        :param addArrowToSelected:
+        :param choicesOnLine:
+        :param seperator:
+        :raises ValueError: if values in confirmKey and cancelKey overlap
+        """
+        cfKeys = self.__conv_keys(confirmKey)
+        ccKeys = self.__conv_keys(cancelKey)
+        npKeys = self.__conv_keys(navigatePreviousKeys)
+        nnKeys = self.__conv_keys(navigateNextKeys)
 
-	@staticmethod
-	def __conv_keys(item: tuple[_key, ...] | list[_key] | _key) -> list[_key]:
-		if isinstance(item, tuple):
-			return list(item)
-		elif isinstance(item, list):
-			return item
-		return [item]
+        seenKeys = set()
+        for key in cfKeys + ccKeys + npKeys + nnKeys:
+            if key in seenKeys:
+                raise ValueError("Parameters specifying Keys may not overlap!")
+            seenKeys.add(key)
 
-	def __call__(
-			self,
-			choices: list[str],
-			prefix: str = "",
-			suffix: str = "",
-			selected: int = 0,
-			minimumHighlightLength: int = 0,
-			terminalTitleBefore: str = "Terminal",
-			returnLine: bool = False
-		) -> int | tuple[int, str]:
-		r"""
-		Starts the interface
-		:param choices:
-		:param prefix:
-		:param suffix:
-		:param selected:
-		:param minimumHighlightLength:
-		:param terminalTitleBefore:
-		:param returnLine:
-		:return:
-		"""
-		system(f"TITLE {self.terminalWindowTitle}")
+        self.confirmKeys = cfKeys
+        self.cancelKeys = ccKeys
+        self.navPrevKeys = npKeys
+        self.navNextKeys = nnKeys
+        self.textColor = textColor
+        self.hlColor = highlightTextColor + highlightBackgroundColor
+        self.choicesSurround = choicesSurround
+        self.addArrowToSelected = addArrowToSelected
+        self.choicesOnLine = choicesOnLine
+        self.seperator = seperator
+        self.terminalWindowTitle = ("Choice Interface {" +
+                                    "".join(random.choices(digits, k=10)) + "}")
+        self.lastKeyPressed = None
 
-		if len(choices) <= 1 or (not (isinstance(choices, list) and all([isinstance(x, str) for x in choices]))):
-			raise ValueError("Parameter 'lines' must be of length >= 2 and of type list[str]")
-		if 0 > selected >= len(choices):
-			raise ValueError(
-				"Parameter 'selected' must be index of line in 'lines' and may therefore not be bigger than the "
-				"biggest index of 'lines' or smaller than 0"
-			)
+    @staticmethod
+    def __conv_keys(item: tuple[_key, ...] | list[_key] | _key) -> list[_key]:
+        if isinstance(item, tuple):
+            return list(item)
+        elif isinstance(item, list):
+            return item
+        return [item]
 
-		if minimumHighlightLength > 0:
-			hlLen = minimumHighlightLength
-		else:
-			hlLen = max([len(line) for line in choices]) + abs(minimumHighlightLength)
-			if self.addArrowToSelected:
-				hlLen += 3
+    def __call__(
+            self,
+            choices: list[str],
+            prefix: str = "",
+            suffix: str = "",
+            selected: int = 0,
+            minimumHighlightLength: int = 0,
+            terminalTitleBefore: str = "Terminal",
+            returnLine: bool = False
+    ) -> int | tuple[int, str]:
+        r"""
+        Starts the interface
+        :param choices:
+        :param prefix:
+        :param suffix:
+        :param selected:
+        :param minimumHighlightLength:
+        :param terminalTitleBefore:
+        :param returnLine:
+        :return: The index of the chosen line, or, if ``returnLine`` is ``True``, a tuple of the
+        index and the line itself.
+        :raises ValueError: If an argument is invalid.
+        :raises Exception: If an unexpected and unaccounted-for error occurs.
+        """
+        system(f"TITLE {self.terminalWindowTitle}")
 
-		while True:
-			clear()
-			if prefix:
-				print(self.textColor.value + prefix + foreground.RESET.value)
+        if len(choices) <= 1 or (not (isinstance(choices, list) and
+                                      all([isinstance(x, str) for x in choices]))):
+            raise ValueError("Parameter 'lines' must be of length >= 2 and of type list[str]")
+        if 0 > selected >= len(choices):
+            raise ValueError(
+                "Parameter 'selected' must be index of line in 'lines' and may therefore not "
+                "be bigger than the biggest index of 'lines' or smaller than 0"
+            )
 
-			for i, line in enumerate(choices):
-				_out = ''
-				if i == selected:
-					if not any([self.choicesSurround, self.addArrowToSelected]):
-						_out = f"{self.hlColor.value+self.hlTextColor.value}{line:<{hlLen}}{foreground.RESET.value}"
-					elif self.addArrowToSelected:
-						_out = f"{self.hlColor.value+self.hlTextColor.value}{line:<{hlLen-3}} > {foreground.RESET.value}"
-					else:
-						_out = f"{self.hlColor.value+self.hlTextColor.value}{line:<{hlLen}}{foreground.RESET.value}"
-				else:
-					_out = f"{self.textColor.value}{line:<{hlLen}}{foreground.RESET.value}"
-				if self.choicesSurround:
-					_out = self.choicesSurround+_out+self.choicesSurround
-				print(_out)
+        if minimumHighlightLength > 0:
+            hlLen = minimumHighlightLength
+        else:
+            hlLen = max([len(line) for line in choices]) + abs(minimumHighlightLength)
+            if self.addArrowToSelected:
+                hlLen += 3
 
-			if suffix:
-				print(self.textColor.value+prefix+foreground.RESET.value)
+        while True:
+            clear()
+            if prefix:
+                print(self.textColor + prefix + foreground.RESET)
 
-			key: _key | None = self._waitForKey()
+            _out = []
+            for i, line in enumerate(choices):
+                if i == selected:
+                    if not any([self.choicesSurround, self.addArrowToSelected]):
+                        _out.append(f"{self.hlColor}{line:<{hlLen}}{foreground.RESET}")
+                    elif self.addArrowToSelected:
+                        _out.append(
+                            f"{self.hlColor}{line:<{hlLen - 3}} > "
+                            f"{foreground.RESET}"
+                        )
+                    else:
+                        _out.append(f"{self.hlColor}{line:<{hlLen}}{foreground.RESET}")
+                else:
+                    _out.append(f"{self.textColor}{line:<{hlLen}}{foreground.RESET}")
+                if self.choicesSurround:
+                    _out.append(self.choicesSurround + _out + self.choicesSurround)
 
-			if key == Key.down and selected != len(choices)-1:
-				selected += 1
-			elif key == Key.up and selected != 0:
-				selected -= 1
-			elif key in self.confirmKeys:
-				if key == Key.enter: input()
-				system(f"TITLE {terminalTitleBefore}")
-				if returnLine:
-					return selected, choices[selected]
-				return selected
-			elif key in self.cancelKeys:
-				if key == Key.enter: input()
-				system(f"TITLE {terminalTitleBefore}")
-				if returnLine:
-					return -1, ""
-				return -1
-			elif key in [Key.down, Key.up]:
-				pass
-			else:
-				raise Exception("Somehow, Somewhere, Something went wrong :/")
+            out = []
 
-	def _waitForKey(self) -> _key | None:
-		lst = Listener(on_press=lambda key: self._onKeyPress(key, lst))
-		lst.start()
-		lst.join()
-		return self.__lastKeyPressed
+            for i, line in enumerate(_out):
+                if i % self.choicesOnLine == 0:
+                    out.append("\n")
+                out.append(line)
+                if (i + 1) % self.choicesOnLine != 0:
+                    out.append(self.seperator)
 
-	def _onKeyPress(self, key: _key | None, lst: Listener) -> None:
-		if getActiveWindowTitle() != self.terminalWindowTitle:
-			return
-		self.__lastKeyPressed = key
-		validKeyList: list[_key] = self.confirmKeys+self.cancelKeys+[Key.up, Key.down]
-		if self.__lastKeyPressed in validKeyList:
-			lst.stop()
+            outputstring = "".join(out)
+            print(outputstring)
+
+            if suffix:
+                print(self.textColor.value + prefix + foreground.RESET)
+
+            key: _key | None = self._waitForKey()
+
+            if key in self.navNextKeys and selected != len(choices) - 1:
+                selected += 1
+            elif key in self.navPrevKeys and selected != 0:
+                selected -= 1
+            elif key in self.confirmKeys:
+                if key == Key.enter: input()
+                system(f"TITLE {terminalTitleBefore}")
+                if returnLine:
+                    return selected, choices[selected]
+                return selected
+            elif key in self.cancelKeys:
+                if key == Key.enter: input()
+                system(f"TITLE {terminalTitleBefore}")
+                if returnLine:
+                    return -1, ""
+                return -1
+            elif key in self.navPrevKeys + self.navNextKeys:
+                pass
+            else:
+                raise Exception("Somehow, Somewhere, Something went wrong :/")
+
+    def _waitForKey(self) -> _key | None:
+        lst = Listener(on_press=lambda key: self._onKeyPress(key, lst))
+        lst.start()
+        lst.join()
+        return self.__lastKeyPressed
+
+    def _onKeyPress(self, key: _key | None, lst: Listener) -> None:
+        if getActiveWindowTitle() != self.terminalWindowTitle:
+            return
+        self.__lastKeyPressed = key
+        validKeyList: list[_key] = (
+                self.confirmKeys
+                + self.cancelKeys
+                + self.navPrevKeys
+                + self.navNextKeys
+        )
+        if self.__lastKeyPressed in validKeyList:
+            lst.stop()

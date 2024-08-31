@@ -1,4 +1,4 @@
 .idea/
-*.ignore.txt
+*.ignore.md
 __pycache__/
 *.code-workspace
