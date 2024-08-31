@@ -146,7 +146,7 @@ class ChoiceInterface:
             out = []
 
             for i, line in enumerate(_out):
-                if i % self.choicesOnLine == 0:
+                if i % self.choicesOnLine == 0 and i != 0:
                     out.append("\n")
                 out.append(line)
                 if (i + 1) % self.choicesOnLine != 0 and i != len(_out) - 1:

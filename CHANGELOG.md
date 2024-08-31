@@ -1,3 +1,9 @@
+# UPDATE 1.2.4:2
+
+## FIXED
+- Fixed an issue where the `Terminal.ChoiceInterface` would add a newline before the first choice.
+
+-----------------
 # UPDATE 1.2.4:1
 
 ## FIXED
@@ -7,6 +13,7 @@
 - From now on using `{version}:{fix#}` to symbolize versions that just fix stuff from `{version}`
   - e.g. 1.2.4:1
   - when importing, version is {version}.post{fix#}
+
 ---------------
 # UPDATE 1.2.4
 
