@@ -1,3 +1,7 @@
+r"""
+Contains all the package's decorators
+"""
+
 from collections.abc import Callable
 from functools import wraps
 from inspect import Parameter, signature
@@ -12,36 +16,32 @@ from typing import (
     get_origin,
 )
 
+from .exceptions import MissingAnnotationsError
+
 
 def check_params[R](func: Callable[..., R]) -> Callable[..., R]:
     r"""
-    Checks that all given parameters are the expected type.
+    Checks that all given parameters and the return value are the expected type.
 
     Goes through the function signature to ensure that all the parameters
-    passed when calling this function adhere to them.
+    passed when calling this function adhere to them, as well as the function's
+    return value.
 
     Args:
-        func (collections.abc.Callable[..., R]): The function to be wrapped.
+        func: The function to be wrapped.
 
     Returns:
-        collections.abc.Callable[..., R]: The wrapped function.
+        `collections.abc.Callable[..., R]`: The wrapped function.
 
     Raises:
-        TypeError: Parameter's value does not match the expected type.
-        TypeError: Keyword argument given for function without ** parameter.
-        TypeError: Function returned wrong type.
+        `TypeError`: Parameter's value does not match the expected type.
+        `TypeError`: Keyword argument given for function without ** parameter.
+        `TypeError`: Function returned wrong type.
+        `.exceptions.MissingAnnotationsError`: Function missing annotations
 
-    Example:
-        >>> @check_params
-        >>> def some_func(x: int, y: int) -> None:
-        >>>     ...
-        >>>
-        >>> some_func(1, 2)
-        None
-        >>> some_func(1, 2.5)
-        Traceback (most recent call last):
-            ...
-        TypeError: Invalid type for parameter 'x': 'float'. Expected: 'int'
+    Note:
+        You have to annotate your function fully when using this decorator
+          with the exception of `*args` and `**kwargs`!
     """
 
     def check_for_annotations() -> int:
@@ -251,7 +251,7 @@ def check_params[R](func: Callable[..., R]) -> Callable[..., R]:
             if annotation_check & 0b01:
                 missing.append("the return value")
 
-            raise TypeError(
+            raise MissingAnnotationsError(
                 f"Missing annotations for {
                     missing[0] if len(missing) == 1 else " and ".join(missing)
                 }"
@@ -317,6 +317,12 @@ def check_params[R](func: Callable[..., R]) -> Callable[..., R]:
                 )
 
         func_return: R = func(*args, **kwargs)
+
+        ignore_return_names: list[str] = ["__init__"]
+
+        if hasattr(func, "__name__") and func.__name__ in ignore_return_names:
+            return func_return
+
         return_annot = signature(func).return_annotation
 
         if return_annot is Parameter.empty:
@@ -335,4 +341,4 @@ def check_params[R](func: Callable[..., R]) -> Callable[..., R]:
     return decorator
 
 
-__all__ = ['check_params']
+__all__ = ["check_params"]
