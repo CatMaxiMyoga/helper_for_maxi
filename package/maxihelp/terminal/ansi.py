@@ -1,8 +1,9 @@
-import re
-import sys
-from typing import Self, override
+r"""Contains Utility Classes"""
 
-from .decorators import check_params
+import sys
+from typing import override
+
+from ..decorators import check_params
 
 
 class ANSICode:
@@ -16,7 +17,7 @@ class ANSICode:
         value: The actual ANSI code
     """
 
-    @check_params
+    @check_params()
     def __init__(self, value: str) -> None:
         r"""
         Initializes the ANSICode object
