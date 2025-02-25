@@ -1,3 +1,5 @@
+r"""Contains functionality upgrading the default terminal IO"""
+
 import builtins
 import time
 from typing import Any

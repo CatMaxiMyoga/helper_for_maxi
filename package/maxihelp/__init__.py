@@ -9,6 +9,6 @@ of my projects.
 """
 
 
-from . import decorators, exceptions, utils, validators
+from . import decorators, exceptions, utils, validators, terminal
 
-__all__ = ["decorators", "exceptions", "utils", "validators"]
+__all__ = ["decorators", "exceptions", "utils", "validators", "terminal"]

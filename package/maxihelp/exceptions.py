@@ -1,3 +1,6 @@
+r"""Contains all the package's Exceptions"""
+
+
 class MissingAnnotationsError(Exception):
     pass
 
