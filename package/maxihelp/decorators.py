@@ -5,14 +5,13 @@ from functools import wraps
 from inspect import Parameter, signature
 from typing import Any, Optional, get_origin
 
-from .exceptions import InvalidValidatorError, MissingAnnotationsError, ValidationError
-from .utils import validate_type
-from .utils import validate_type
-from .validators import Validator
-from .validators import Validator
+from .exceptions import (
+    InvalidValidatorError,
+    MissingAnnotationsError,
     ValidationError,
 )
-
+from .utils import validate_type
+from .validators import Validator
 
 
 def check_params(
@@ -139,8 +138,11 @@ def check_params(
                     name = param.name
                     validator = validation_options[name]
 
-                    if get_origin(annot) not in validator.allowed_types \
-                        and validator.allowed_types != [Any]:
+                    if get_origin(
+                        annot
+                    ) not in validator.allowed_types and validator.allowed_types != [
+                        Any
+                    ]:
                         raise InvalidValidatorError(
                             f"Validator {validator.__class__.__name__} not "
                             f"allowed on type {
