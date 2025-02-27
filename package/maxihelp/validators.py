@@ -1,5 +1,6 @@
 r"""Contains all Validators usable in `.decorators.check_params()`"""
 
+from collections.abc import Callable
 import re
 from typing import Any, Protocol
 
@@ -11,7 +12,55 @@ class Validator(Protocol):
     def validate(self, name: str, value: Any) -> str | None: ...
 
 
-class RegexValidator(Validator):
+class CustomValidator[T]:
+    r"""
+    Uses `callback` to validate parameters.
+
+    Attrubutes:
+        error_message: The message the Validator returns if validation failed.
+        allowed_types: The types of parameters allowed to use this validator.
+    """
+
+    error_message = "Validation for Parameter {} failed."
+    allowed_types = [Any]
+
+    def __init__(self, callback: Callable[[T], bool]) -> None:
+        self.callback = callback
+
+    def validate(self, name: str, value: T) -> str | None:
+        valid = self.callback(value)
+
+        if valid:
+            return None
+
+        return self.error_message.format(repr(name))
+
+
+class LengthValidator:
+    r"""
+    Validates the length of a string or list.
+
+    Attrubutes:
+        error_message: The message the Validator returns if validation failed.
+        allowed_types: The types of parameters allowed to use this validator.
+    """
+
+    error_message = "Parameter {} has invalid length."
+    allowed_types = [str, list]
+
+    def __init__(self, length: int | tuple[int, int]) -> None:
+        self.length = length if isinstance(length, tuple) else (length, length)
+
+    def validate(self, name: str, value: str | list) -> None:
+        valid = self.length[0] <= len(value) <= self.length[1]
+
+        if valid:
+            return None
+
+        return self.error_message.format(repr(name))
+
+
+class RegexValidator:
     r"""
     Uses `re.fullmatch()` to validate parameters.
 
@@ -35,7 +84,7 @@ class RegexValidator(Validator):
         self.flags = flags
 
     def validate(self, name: str, value: str) -> str | None:
-        valid = re.match(self.regex, value, self.flags)
+        valid = re.fullmatch(self.regex, value, self.flags)
 
         if valid:
             return None
@@ -43,7 +92,7 @@ class RegexValidator(Validator):
         return self.error_message.format(repr(name))
 
 
-class IntRangeValidator(Validator):
+class IntRangeValidator:
     r"""
     Checks if the parameter is in the given range
 
@@ -75,7 +124,7 @@ class IntRangeValidator(Validator):
         return self.error_message.format(repr(name), self.min, self.max)
 
 
-class FloatRangeValidator(Validator):
+class FloatRangeValidator:
     r"""
     Checks if the parameter is in the given range
 
@@ -123,24 +172,10 @@ class FloatRangeValidator(Validator):
         return self.error_message.format(repr(name), num_range)
 
 
-class DictValidator(Validator):
-    r"""
-    Checks if the parameter's keys and values fit the given structure.
-
-    Attributes:
-        error_message: The message the Validator returns if validation failed.
-        allowed_types: The types of parameters allowed to use this Validator.
-    """
-
-    error_message = "Parameter {} does not fit the given validation structure."
-    allowed_types = [dict]
-    __structure_type = dict[str, type[Any] | tuple[type[Any], None] | "__structure_type"]
-
-    def __init__(self, structure: __structure_type) -> None:
-
-
 __all__ = [
     "Validator",
+    "CustomValidator",
+    "LengthValidator",
     "RegexValidator",
     "IntRangeValidator",
     "FloatRangeValidator",

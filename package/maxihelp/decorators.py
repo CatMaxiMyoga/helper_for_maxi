@@ -3,19 +3,16 @@ r"""Contains all the package's decorators"""
 from collections.abc import Callable
 from functools import wraps
 from inspect import Parameter, signature
-from .utils import validate_type
-from typing import (
-    Any,
-    Optional,
-    get_origin,
-)
+from typing import Any, Optional, get_origin
 
-from .exceptions import (
-    InvalidValidatorError,
-    MissingAnnotationsError,
+from .exceptions import InvalidValidatorError, MissingAnnotationsError, ValidationError
+from .utils import validate_type
+from .utils import validate_type
+from .validators import Validator
+from .validators import Validator
     ValidationError,
 )
-from .validators import Validator
+
 
 
 def check_params(
@@ -23,7 +20,7 @@ def check_params(
     *,
     force_annotations: bool = True,
     validate_return: bool = True,
-    **kwargs: Validator
+    **kwargs: Validator,
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     r"""
     Checks that all given parameters and the return value are the expected type.
@@ -142,7 +139,8 @@ def check_params(
                     name = param.name
                     validator = validation_options[name]
 
-                    if get_origin(annot) not in validator.allowed_types:
+                    if get_origin(annot) not in validator.allowed_types \
+                        and validator.allowed_types != [Any]:
                         raise InvalidValidatorError(
                             f"Validator {validator.__class__.__name__} not "
                             f"allowed on type {
