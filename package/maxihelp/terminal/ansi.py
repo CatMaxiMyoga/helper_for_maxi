@@ -1,5 +1,6 @@
 r"""Contains Utility Classes"""
 
+from __future__ import annotations
 import sys
 from typing import override
 
@@ -98,17 +99,18 @@ class ANSIColorCode(ANSICode):
         code = ";".join(map(str, codes))
 
         if code.startswith("38;2") or code.startswith("48;2"):
-            if len(codes) != 5 or not all(
-                0 <= x <= 255 for x in codes[2:]
-            ):
+            if len(codes) != 5 or not all(0 <= x <= 255 for x in codes[2:]):
                 return False
             return True
 
         for c in codes:
             if not (
-                0 <= c <= 7 or 30 <= c <= 37
-                or 40 <= c <= 47 or 90 <= c <= 97
-                or 100 <= c <= 107 or (c == 38 or c == 48)
+                0 <= c <= 7
+                or 30 <= c <= 37
+                or 40 <= c <= 47
+                or 90 <= c <= 97
+                or 100 <= c <= 107
+                or (c == 38 or c == 48)
             ):
                 return False
 

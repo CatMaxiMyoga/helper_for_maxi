@@ -51,7 +51,7 @@ class LengthValidator:
     def __init__(self, length: int | tuple[int, int]) -> None:
         self.length = length if isinstance(length, tuple) else (length, length)
 
-    def validate(self, name: str, value: str | list) -> None:
+    def validate(self, name: str, value: str | list[Any]) -> str | None:
         valid = self.length[0] <= len(value) <= self.length[1]
 
         if valid:
@@ -72,7 +72,7 @@ class RegexValidator:
     error_message = "Parameter {} does not match specified regex pattern!"
     allowed_types = [str]
 
-    def __init__(self, regex: str, flags: re._FlagsType = 0) -> None:
+    def __init__(self, regex: str, flags: int = 0) -> None:
         r"""
         Initializes the Validator.
 
@@ -90,6 +90,16 @@ class RegexValidator:
             return None
 
         return self.error_message.format(repr(name))
+
+
+class DateRangeValidator:
+    r"""
+    Checks if the parameter is in the given range
+
+    Attributes:
+        error_message: The message the Validator returns if validation failed.
+        allowed_types: The types of parameters allowed to use this Validator.
+    """
 
 
 class IntRangeValidator:
@@ -157,16 +167,25 @@ class FloatRangeValidator:
         self.inclusive = inclusive
 
     def validate(self, name: str, value: float) -> str | None:
-        valid = (
-            value >= self.min if self.inclusive[0] else value > self.min
-        ) and (value <= self.max if self.inclusive[1] else value < self.max)
+        valid = all(
+            [
+                value >= self.min if self.inclusive[0] else value > self.min,
+                value <= self.max if self.inclusive[1] else value < self.max,
+            ]
+        )
 
         if valid:
             return None
 
+        def get_num_str(num: float) -> str:
+            if 0.01 <= abs(num) < 1000:
+                return str(num)
+
+            return f"{num:.3e}"
+
         num_range = (
-            f"{"[" if self.inclusive[0] else "]"}{self.min:.2f};"
-            f"{self.max:.2f}{"]" if self.inclusive[1] else "["}"
+            f"{"[" if self.inclusive[0] else "]"}{get_num_str(self.min)};"
+            f"{get_num_str(self.max)}{"]" if self.inclusive[1] else "["}"
         )
 
         return self.error_message.format(repr(name), num_range)

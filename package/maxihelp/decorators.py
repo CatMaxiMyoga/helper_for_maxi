@@ -5,17 +5,15 @@ from functools import wraps
 from inspect import Parameter, signature
 from typing import Any, Optional, get_origin
 
-from .exceptions import (
-    InvalidValidatorError,
-    MissingAnnotationsError,
-    ValidationError,
-)
+from . import exceptions
 from .utils import validate_type
 from .validators import Validator
 
 
 def check_params(
-    validation_options: Optional[dict[str, Validator]] = None,
+    validation_options: (
+        Optional[dict[str, Validator]] | Callable[..., Any]
+    ) = None,
     *,
     force_annotations: bool = True,
     validate_return: bool = True,
@@ -51,6 +49,9 @@ def check_params(
         `ValueError`: `special_validation` or `**kwargs` entry specified for
           unannotated parameter.
     """
+
+    if callable(validation_options):
+        return check_params()(validation_options)
 
     if validation_options is None:
         validation_options = {}
@@ -100,7 +101,7 @@ def check_params(
                 if annotation_check & 0b01:
                     missing.append("the return value")
 
-                raise MissingAnnotationsError(
+                raise exceptions.MissingAnnotationsError(
                     f"Missing annotations for {
                         missing[0]
                         if len(missing) == 1
@@ -143,7 +144,7 @@ def check_params(
                     ) not in validator.allowed_types and validator.allowed_types != [
                         Any
                     ]:
-                        raise InvalidValidatorError(
+                        raise exceptions.InvalidValidatorError(
                             f"Validator {validator.__class__.__name__} not "
                             f"allowed on type {
                                 get_origin(annot).__class__.__name__
@@ -155,7 +156,7 @@ def check_params(
                     if validator_result is None:
                         continue
 
-                    raise ValidationError(validator_result)
+                    raise exceptions.ValidationError(validator_result)
 
             kwargs_param: Parameter | None = None
             for param in params.values():
